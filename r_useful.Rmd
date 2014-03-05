@@ -1,0 +1,943 @@
+% Useful Stuff in R
+% [Chris Krogslund](http://ckro.gs); [Political Science](http://polisci.berkeley.edu) // [D-Lab](http://dlab.berkeley.edu) // [UC Berkeley](http://www.berkeley.edu/)
+% [ckrogslund@berkeley.edu](mailto:ckrogslund@berkeley.edu)
+
+
+```{r chunksetup, include=FALSE} 
+setwd(dir="/Users/ChristopherKrogslund/Documents/D-Lab/Teaching/Useful Stuff in R 2014-03/")
+```
+
+# What exactly is "useful stuff" in R?
+
+- For some, it might just be basic calculations
+```{r}
+63.24*pi # Multiply 63.24 by pi
+exp(x=4.39) # Raise e to the power of 4.39
+log(x=1.7) # Take the log of 1.7
+tan(x=58) # Compute the tangent of 58
+```
+
+- For others, it might be large or complex mathematical operations
+```{r}
+# Take one million samples from the standard normal distribution
+data.sample<-rnorm(n=1000000, mean=0, sd=1) 
+
+# Build a 1000 x 1000 matrix from the sample data
+big.matrix<-matrix(data=data.sample, ncol=1000) 
+
+dim(x=big.matrix) # Confirm that "big.matrix" is 1000 x 1000
+big.matrix.inverse<-solve(a=big.matrix) # Compute the inverse of "big.matrix"
+system.time(expr=solve(a=big.matrix)) # Compute time required to invert "big.matrix"
+```
+
+# Useful Stuff: Applied Research Edition
+
+- For most applied researchers, "useful stuff" that can be done in R boils down to a few core items: 
+
+a) ***Importing*** different types of data from different sources
+b) ***Summarizing*** the structure and content of data
+c) Carrying out operations and calculations across ***groups*** 
+d) ***Reshaping*** data to and from various formats
+e) Attempting to conduct ***causal inference*** 
+
+# Importing data/spreadsheets 
+
+- For spreadsheet data that **is not** explicitly saved as a Microsoft Excel file:
+```{r, eval=FALSE}
+# Import data with header row, values separated by ",", decimals as "."
+data<-read.csv(file="  ", stringsAsFactors=) # Basic Call
+```
+```{r}
+# Example
+cpds.data<-read.csv(file="datasets/cpds_comma.csv", stringsAsFactors=F) 
+dim(cpds.data) # Check dimensionality of dataset
+cpds.data[1:5, 1:5] # View first 5 rows/columns
+```
+```{r, eval=FALSE}
+# Import data with header row, values separated by ";", decimals as ","
+data<-read.csv2(file="  ", stringsAsFactors=)
+
+# Import data with header row, values separated by tab, decimals as "."
+data<-read.delim(file="  ", stringsAsFactors=)
+
+# Import data with header row, values separated by tab, decimals as ";"
+data<-read.delim2(file="  ", stringsAsFactors=)
+
+# For importing tabular data with maximum customizeability
+data<-read.table(file=, header=, sep=, quote=, dec=, fill=, stringsAsFactors=)
+```
+
+- For spreadsheet data that **is** explicitly saved as a Microsoft Excel file (.xls or .xlsx):
+```{r, message=FALSE}
+# Install the "gdata" package (only necessary one time)
+# install.packages("gdata") # Not Run
+
+# Load the "gdata" package (necessary every new R session)
+library(gdata)
+```
+```{r, eval=FALSE}
+# For importing both .xls and .xlsx files
+data<-read.xls(xls=, sheet=) # Basic Call
+```
+```{r}
+# Example with .xls (single sheet)
+cpds.data<-read.xls(xls="datasets/cpds_excel_old.xls") 
+cpds.data[1:5, 1:5]
+# Example with .xlsx (single sheet)
+cpds.data<-read.xls(xls="datasets/cpds_excel_new.xlsx") 
+cpds.data[1:5, 1:5]
+```
+
+# Importing data/proprietaries (e.g.: .dta, .spss, .ssd)
+
+```{r, eval=FALSE}
+# Install the "foreign" package (only necessary one time)
+# install.packages("foreign") # Not Run
+
+# Load the "foreign" package (necessary every new R session)
+library(foreign)
+
+read.xxxx(file=) # Basic call, where .xxxx is the imported file's extension/client
+
+# For importing Stata files
+data<-read.dta(file=)
+```
+```{r}
+# Example
+cpds.data<-read.dta(file="datasets/cpds_stata.dta")
+cpds.data[1:5, 1:5]
+```
+```{r, eval=FALSE}
+# For importing SPSS files
+data<-read.spss(file=)
+
+# For importing SAS files
+data<-read.ssd(file=)
+data<-read.xport(file=)
+
+# For importing Fortran files
+data<-read.fortran(file=)
+
+# For importing DBF files
+data<-read.dbf(file=)
+```
+
+# Importing data/urls (e.g.: http, https, ftp)
+
+- Most data importing facilities in R can be adapted to import non-local files via http/s/ftp
+- For instance, [this online dataset](http://www.quandl.com/DISASTERCENTER-US-Disaster-Center/RATES-US-Crime-Rates-per-100-000-persons)
+```{r}
+# Import crime dataset from Quandl
+link<-"http://www.quandl.com/api/v1/datasets/DISASTERCENTER/RATES.csv"
+crime.data<-read.csv(file=link)
+crime.data[1:25, 1:5]
+```
+
+# Importing data/other (e.g.: html tables, html, xml, json) 
+
+- Say we wanted to scrape a list of votes in the US Congress contained in an html table (like [this](http://clerk.house.gov/evs/2014/ROLL_000.asp))
+```{r}
+# Install the "XML" package (only necessary one time)
+# install.packages("XML") # Not Run
+
+# Load the "XML" package (necessary every new R session)
+library(XML)
+```
+```{r, eval=FALSE}
+data<-readHTMLTable(doc=, header=, which=, stringsAsFactors=) # Basic Call
+```
+```{r}
+link<-"http://clerk.house.gov/evs/2014/ROLL_000.asp"
+votes.2014<-readHTMLTable(doc=link, header=T, which=1, stringsAsFactors=F)
+
+dim(votes.2014) # Check data dimensionality
+colnames(votes.2014) # Get column names
+votes.2014[1:25, 1:5]
+```
+
+- Or say we wanted to scrape the content of a web page (for example, [here](http://www.whitehouse.gov/the_press_office/President_Barack_Obamas_Inaugural_Address))
+```{r, message=FALSE}
+# Install the "RCurl" package (only necessary one time)
+# install.packages("RCurl") # Not Run
+
+# Load the "RCurl" and "XML" packages (necessary every new R session)
+library(RCurl)
+library(XML)
+
+link<-"http://www.whitehouse.gov/the_press_office/President_Barack_Obamas_Inaugural_Address"
+speech<-getURL(url=link)
+
+# Optional html parsing (clean file, extract content)
+speech.parsed<-htmlParse(file=speech)
+
+text<-xpathSApply(doc=speech.parsed, path="//div[@id='content']", fun=xmlValue)
+
+# Optional content analysis
+
+# Install the "qdap" package (only necessary one time)
+# install.packages("qdap") # Not Run
+
+# Load the "qdap" package (necessary every new R session)
+library(qdap)
+
+# Convert the text to a data.frame
+text.df<-data.frame(text=text, stringsAsFactors=F)
+
+# Split the text into sentences
+sentences<-sentSplit(dataframe=text.df, text.var="text")
+
+# Compute various polarity (sentiment) statistics 
+polarity.score<-polarity(text.var=sentences$text)
+polarity.score$group[,c("total.sentences", "total.words", "ave.polarity")]
+polarity.score$all[1:20, c("pos.words", "neg.words")]
+```
+
+- Or say we wanted to scrape the content of an RSS feed (XML) (for example, [here](http://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml))
+```{r}
+# Specify a link and issue a GET request
+link<-"http://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"
+page<-getURL(url=link)
+
+# Parse the results of the get request as an XML file
+rss.feed<-xmlParse(file=page) # Not printed
+```
+
+- Or say we wanted to import a JSON file
+```{r}
+# Install the "jsonlite" package (only necessary one time)
+# install.packages("jsonlite") # Not Run
+
+# Load the "jsonlite" package (necessary every new R session)
+library(jsonlite)
+
+# Import JSON file, convert to list
+cpds.data<-fromJSON(txt="datasets/cpds_json.txt", simplifyDataFrame=F)
+head(cpds.data)
+# Import JSON file, convert to data.frame
+cpds.data<-fromJSON(txt="datasets/cpds_json.txt", simplifyDataFrame=T)
+head(cpds.data)
+```
+
+# Summarizing data/example dataset
+
+Replication data from Gelman et al., "Rich State, Poor State, Red State, Blue State: What’s the Matter with Connecticut?", *Quarterly Journal of Political Science*, 2007, 2: 345-367
+
+For decades, the Democrats have been viewed as the party of the poor, with the Republicans representing the rich. Recent presidential elections, however, have shown a reverse pattern, with Democrats performing well in the richer blue states in the northeast and coasts, and Republicans dominating in the red states in the middle of the country and the south. Through multilevel modeling of individual- level survey data and county- and state-level demographic and electoral data, we reconcile these patterns.Furthermore, we find that income matters more in red America than in blue America. In poor states, rich people are much more likely than poor people to vote for the Republican presidential candidate, but in rich states (such as Connecticut), income has a very low correlation with vote preference.
+
+```{r}
+library(foreign)
+red.blue<-read.dta("datasets/2004_labeled_processed_race.dta")
+```
+
+# Summarizing data/object structure
+```{r}
+# Get the object class
+class(red.blue)
+# Get the object dimensionality 
+dim(red.blue) # Note this is rows by columns
+# Get the column names
+colnames(red.blue)
+# Get the row names
+rownames(red.blue)[1:50] # Only the first 50 rows
+# View first six rows and all columns
+head(red.blue)
+# View last six rows and all columns
+tail(red.blue)
+# Get detailed column-by-column information
+str(red.blue)
+```
+
+# Summarizing data/object content
+
+- A good place to start with our data is to calculate summary statistics
+
+- ***Caution***: Although we have some inherently ratio (continuous) variables, the authors binned the data to create ordinal variables (e.g.: Age and Income).  *Bonus*: the bins have differing widths.
+
+- Take a look at the variable "age9"
+```{r}
+# View unique values observed in "age9" (note the factor levels)
+unique(x=red.blue$age9)
+```
+
+Binned Age | True Age
+------ | -----
+1|18-24
+2|25-29
+3|30-39 
+4|40-44
+5|45-49
+6|50-59
+7|60-64
+8|65-74
+9|75+
+
+- Some notes on computing summary statistics:
+1) Note that these functions are sensitive to missing values (NA); you should be sure to specify na.rm=T to avoid errors 
+
+```{r}
+# Sample 100 times from the standard normal distribution 
+sample.data<-rnorm(n=100, mean=0, sd=1)
+
+# Add some missing values to the sample
+sample.data[c(1,4,16,64)]<-NA
+
+# Attempt to calculate the sample mean (presence of NAs)
+mean(x=sample.data)
+# Remove missing values from the sample
+sample.data<-sample.data[!is.na(sample.data)]
+
+# Attempt to calculate the sample mean (absence of NAs)
+mean(x=sample.data)
+```
+
+2) These functions are also sensitive to the presence of factor variables; remove the factor levels to avoid errors (usually use one of as.vector(), as.character(), or as.numeric())
+
+```{r}
+# Check for factor levels in "age9"
+is.factor(x=red.blue$age9)
+# Attempt to calculate the sample mean ("age9" is factor)
+mean(x=red.blue$age9, na.rm=T)
+# Remove factor levels in "age9"
+red.blue$age9<-as.numeric(x=red.blue$age9)
+
+# Check that there are no more factor levels in "age9"
+is.factor(x=red.blue$age9)
+# Attempt to calculate the sample mean ("age9" is not factor)
+mean(x=red.blue$age9, na.rm=T)
+```
+
+- Computing some common summary statistics:
+```{r}
+# Mean
+mean(x=as.numeric(red.blue$age9), na.rm=T)
+# Median
+median(x=as.numeric(red.blue$age9), na.rm=T)
+# Standard Deviation
+sd(x=as.numeric(red.blue$age9), na.rm=T)
+# Quartiles
+quantile(x=as.numeric(red.blue$age9), na.rm=T, probs=seq(from=0, to=1, by=0.25))
+# Quintiles
+quantile(x=as.numeric(red.blue$age9), na.rm=T, probs=seq(from=0, to=1, by=0.2))
+# Deciles
+quantile(x=as.numeric(red.blue$age9), na.rm=T, probs=seq(from=0, to=1, by=0.1))
+# Percentiles
+quantile(x=as.numeric(red.blue$age9), na.rm=T, probs=seq(from=0, to=1, by=0.01))
+```
+
+- We could do the same thing for lots of variables, but there is an easier way!
+```{r}
+# Compute standard summary statistics for object "red.blue"
+summary(object=red.blue)
+```
+
+- Unfortunately, the built-in summary methods don't always pickup every statistic of interest (for example, certain frequencies)
+- For this, it is helpful to produce ratios of the lengths of vector subsets
+```{r}
+# Isolate the gender column, remove factor levels
+gender<-as.character(x=red.blue$sex)
+
+# Remove missing values
+gender<-gender[!is.na(gender)]
+
+# View unique values
+unique(gender)
+# Subset the gender vector to include only males
+males<-gender[gender=="male"]
+head(males)
+# Compute the percentage of males using vector lengths
+length(males)
+length(gender)
+length(males)/length(gender)*100
+```
+
+- This can get really complicated really quickly
+- Suppose we wanted to know how voting behavior in the 2004 Presidential Election varies by race
+- That means we have to calculate frequencies as above for each race in {White, Black, Hispanic/Latino, Asian, Other} and each vote choice in {Bush, Kerry, Nader, Other, No Vote}.
+- How to tackle these tabulations?
+
+# Group-wise Operations
+
+All techniques for this problem rely on the ***split-apply-combine*** strategy
+
+**First,** take the data (or some object) and *split* it into smaller datasets on the basis of some variable
+
+Dataset A
+
+x|y|z
+-----|------|-----
+1|1|1
+2|2|1
+3|3|1
+4|1|2
+5|2|2
+6|3|2
+
+Datasets B and C (Dataset A split according to "z") 
+
+x|y|z| | | | | |x|y|z
+-----|------|-----|-----|-----|-----|-----|-----|-----|-----|-----
+1|1|1| | | | | |4|1|2
+2|2|1| | | | | |5|2|2
+3|3|1| || | | |6|3|2
+
+**Second,** apply some function to each one of the smaller datasets/objects 
+
+Example function: *mean* of variables "x" and "y"
+
+Datasets B' and C'
+
+mean(x)|mean(y)|z| | | | | |mean(x)|mean(y)|z
+-----|------|-----|-----|-----|-----|-----|-----|-----|-----|-----
+2|2|1| | | | | |5|2|2
+
+**Third,** combine the results into a larger dataset/object
+
+Datasets B' and C'
+
+mean(x)|mean(y)|z| | | | | |mean(x)|mean(y)|z
+-----|------|-----|-----|-----|-----|-----|-----|-----|-----|-----
+2|2|1| | | | | |5|2|2
+
+Dataset A'
+
+mean(x)|mean(y)|z
+-----|------|-----
+2|2|1
+5|2|2
+
+# Group-wise Operations/plyr
+
+- *plyr* is the go-to package for all your splitting-applying-combining needs
+- Among its many benefits (above base R capabilities):
+a) Don't have to worry about different name, argument, or output consistencies
+b) Easily parallelized 
+c) Input from, and output to, data frames, matricies, and lists
+d) Progress bars for lengthy computation
+e) Informative error messages
+
+```{r}
+# Install the "plyr" package (only necessary one time)
+# install.packages("plyr") # Not Run
+
+# Load the "plyr" package (necessary every new R session)
+library(plyr)
+```
+
+# Group-wise Operations/plyr/selecting functions
+
+- Two essential questions:
+1) What is the class of your input object?
+2) What is the class of your desired output object?
+- If you want to split a **d**ata frame, and return results as a **d**ata frame, you use **dd**ply
+- If you want to split a **d**ata frame, and return results as a **l**ist, you use **dl**ply
+- If you want to split a **l**ist, and return results as a **d**ata frame, you use **ld**ply
+
+# Group-wise Operations/plyr/writing commands
+
+All of the major plyr functions have the same basic syntax
+
+```{r, eval=FALSE}
+xxply(.data=, .variables=, .fun=, ...)
+```
+
+Consider the case where we want to calculate vote choice statistics across race from a data.frame, and return them as a data.frame:
+
+```{r}
+# Check for (and remove) factor levels in "race" and "pres04"
+is.factor(x=red.blue$race)
+red.blue$race<-as.character(x=red.blue$race)
+is.factor(x=red.blue$race)
+is.factor(x=red.blue$pres04)
+# Check the class of the object
+class(red.blue)
+# Using the appropriate plyr function (ddply), compute vote percentages for Kerry (pres04==1), Bush (pres04==2), Nader (pres04==3), and others (pres04==9)
+ddply(.data=red.blue, .variables=.(race), .fun=summarize, 
+      kerry=length(pres04[pres04==1])/length(pres04)*100, 
+      bush=length(pres04[pres04==2])/length(pres04)*100, 
+      nader=length(pres04[pres04==3])/length(pres04)*100, 
+      other=length(pres04[pres04==9])/length(pres04)*100 
+)
+```
+
+Consider the case where we want to calculate vote choice statistics across race from a data.frame, and return them as a list:
+
+```{r}
+dlply(.data=red.blue, .variables=.(race), .fun=summarize, 
+      kerry=length(pres04[pres04==1])/length(pres04)*100, 
+      bush=length(pres04[pres04==2])/length(pres04)*100, 
+      nader=length(pres04[pres04==3])/length(pres04)*100, 
+      other=length(pres04[pres04==9])/length(pres04)*100 
+)
+```
+
+Consider the case where we want to calculate vote choice statistics across race from a list, and return them as a data.frame:
+
+```{r}
+# Split the data.frame into a list on the basis of "race"
+red.blue.race.list<-split(x=red.blue, f=red.blue$race)
+
+# Check the class of the object
+class(red.blue.race.list)
+# Check for list element names
+objects(red.blue.race.list)
+# Compute summary statistics (note: no .variable argument)
+ldply(.data=red.blue.race.list, .fun=summarize, 
+      kerry=length(pres04[pres04==1])/length(pres04)*100, 
+      bush=length(pres04[pres04==2])/length(pres04)*100, 
+      nader=length(pres04[pres04==3])/length(pres04)*100, 
+      other=length(pres04[pres04==9])/length(pres04)*100 
+)
+```
+
+Consider the case where we want to calculate vote choice statistics across race from a list, and return them as a list:
+
+```{r}
+llply(.data=red.blue.race.list, .fun=summarize, 
+      kerry=length(pres04[pres04==1])/length(pres04)*100, 
+      bush=length(pres04[pres04==2])/length(pres04)*100, 
+      nader=length(pres04[pres04==3])/length(pres04)*100, 
+      other=length(pres04[pres04==9])/length(pres04)*100 
+)
+```
+
+# Group-wise Operations/plyr/functions
+
+- plyr can accomodate any user-defined function, but it also comes with some pre-defined functions that assist with the most common split-apply-combine tasks
+- We've already seen **summarize**, which creates user-specified vectors and combines them into a data.frame.  Here are some other helpful functions:
+
+**transform**: applies a function to a data.frame and adds new vectors (columns) to it
+
+```{r}
+# Add a column containing the average age of the race of the individual
+red.blue.transform<-ddply(.data=red.blue, .variables=.(race), .fun=transform,
+      race.avg.age=mean(x=age9, na.rm=T))
+unique(red.blue.transform$race.avg.age)
+```
+
+Note that **transform** can't do transformations that involve the results of *other* transformations from the same call
+
+```{r}
+# Attempt to add new columns that draw on other (but still new) columns
+red.blue.transform<-ddply(.data=red.blue, .variables=.(race), .fun=transform,
+      race.avg.age=mean(x=age9, na.rm=T),
+      race.avg.age.plusone=race.avg.age+1)
+```
+
+For this, we need **mutate**: just like transform, but it executes the commands iteratively so  transformations can be carried out that rely on previous transformations from the same call
+
+```{r}
+# Attempt to add new columns that draw on other (but still new) columns
+red.blue.mutate<-ddply(.data=red.blue, .variables=.(race), .fun=mutate,
+      race.avg.age=mean(x=age9, na.rm=T),
+      race.avg.age.plusone=race.avg.age+1)
+unique(red.blue.mutate$race.avg.age)
+unique(red.blue.mutate$race.avg.age.plusone)
+```
+
+Another very useful function is **arrange**, which orders a data frame on the basis of column contents
+
+```{r}
+# Arrange by "age9", ascending
+red.blue.age<-plyr::arrange(df=red.blue, age9)
+red.blue.age[1:25, 1:5]
+# Arrange by "age9", descending
+red.blue.age<-plyr::arrange(df=red.blue, desc(age9))
+red.blue.age[1:25, 1:5]
+# Arrange by "age9" then "sex"
+red.blue.age.sex<-plyr::arrange(df=red.blue, age9, sex)
+red.blue.age.sex[1:25, 1:5]
+# Arrange by "sex" (descending) then "age9"
+red.blue.sex.age<-plyr::arrange(df=red.blue, desc(sex), age9)
+red.blue.sex.age[1:25, 1:5]
+```
+
+# Group-wise Operations/dplyr
+
+- While plyr is a really great split-apply-combine tool, it can be a little slow when working over very large datasets.  Consider this dataset containing all votes cast by all members of the U.S. House of Representatives since 1990 (roughly 7 million observations).
+
+```{r}
+# CAUTION: this is a really big file
+load(file="datasets/ushouse_votes")
+
+# View first six rows, check dimensionality
+head(ushouse.votes)
+dim(ushouse.votes)
+```
+
+- For extraordinarily large datasets, there is a new iteration of plyr being developed called **dplyr**.  It is built for working with data.frames only and (currently) only accepts summarise(), mutate(), and arrange(), as well as select() for looking at certain variables and filter() for looking at certain rows.
+
+```{r}
+# Install the "dplyr" package (only necessary one time)
+# install.packages("dplyr") # Not Run
+
+# Load the "dplyr" package (necessary every new R session)
+library(dplyr)
+```
+
+```{r, eval=FALSE}
+# Basic syntax for a dplyr call:
+
+#1) Create a tbl (tabular data structure) that groups the data
+data<-group_by(x=, ...)
+
+#2) Execute the pre-defined function
+summarise(.data=, ...)
+```
+
+A side-by-side comparison of ddply and dplyr (with benchmarks):
+```{r}
+# ddply
+time.ddply<-system.time(avg.yea.states.ddply<-ddply(.data=ushouse.votes, .variables=.(state), summarize, avg.yea=mean(x=yea.vote, na.rm=T)))  
+avg.yea.states.ddply
+# dplyr
+state.groups<-group_by(x=ushouse.votes, state)
+time.dplyr<-system.time(avg.yea.states.dplyr<-summarise(.data=state.groups, 
+                                            avg.yea=mean(x=yea.vote, na.rm=T)))
+
+# Compare the execution times (ratio of ddply-to-plyr)
+time.ddply/time.dplyr
+```
+
+# Reshaping Data/reshape2
+
+- Often times, even before we're interested in doing all this group-wise stuff, we need to reshape our data.  For instance, datasets often arrive at your desk in wide (long) form and you need to convert them to long (wide) form.
+
+- Though base R does have commands for reshaping data (including **aggregate**, **by**, **tapply**, etc.), each of their input commands are slightly different and are only suited for specific reshaping tasks.
+
+- The **reshape2** package overcomes these argument and task inconsistencies to provide a simple, relatively fast way to alter the form of a data.frame.  The package contains effectively two commands, and their functions are in their names: **melt** and **cast**
+
+```{r}
+# Install the "reshape2" package (only necessary one time)
+# install.packages("reshape2") # Not Run
+
+# Load the "reshape2" package (necessary every new R session)
+library(reshape2)
+```
+
+# Reshaping Data/reshape2/melt
+
+- melt() is used to convert wide-form data to long-form.  The basic idea is to take your data.frame and melt it down to a minimal number of columns using two essential pieces of information:
+1) **Unit-of-Analysis identifiers**, or columns you *don't* want to melt down
+2) **Characteristic variables**, or columns you *do* want to melt down
+
+```{r, eval=FALSE}
+# Basic Call
+melt(data=, id.vars=, measure.vars=, variable.name=, value.name=)
+```
+
+To see how this works in practice, consider a subset of the "red.blue" data.frame containing only the first 10 rows and 5 columns
+```{r}
+red.blue.subset<-red.blue[1:10, 1:5]
+red.blue.subset
+```
+
+Suppose we wanted to convert this data from its current wide format to an entirely long format.  How to proceed?
+
+**First**, select which columns you want to keep (i.e. not melt).  In this case, I'm interested in having individual voters as my unit of analysis.  Unfortunately, there is no column containing an individual identification number in this data, so I'll just add one as "individual":
+```{r}
+red.blue.subset$individual<-1:nrow(red.blue.subset)
+red.blue.subset
+```
+
+**Second**, select which columns you want to melt.  In this case, I'd like to melt every column except "individual".
+
+With these two pieces of information, I'm ready to melt down the data.frame:
+```{r}
+melt(data=red.blue.subset, id.vars="individual", 
+     measure.vars=c("state", "pres04", "sex", "race", "age9"))
+# If you want to melt ALL columns that aren't ID variables, you can also omit the "measure.vars" argument
+melt(data=red.blue.subset, id.vars="individual")
+```
+
+Note that melt collapses all of the measure variables into two columns: one containing the column/measurement name, the other containing the column/measurement value for that row.  By default, these columns are named "variable" and "value", though they can be customized using the "variable.name" and "value.name" arguments.  For example:
+```{r}
+melt(data=red.blue.subset, id.vars="individual", 
+     measure.vars=c("state", "pres04", "sex", "race", "age9"),
+     variable.name="characteristic",
+     value.name="response")
+```
+
+Note also that one need not melt down all columns that aren't serving as ID columns.  The melted data.frame will only contain the values of the measure variables you select.  For instance:
+```{r}
+melt(data=red.blue.subset, id.vars="individual", 
+     measure.vars=c("pres04", "sex"))
+```
+
+# Reshaping Data/reshape2/cast
+
+- There are two main cast functions in the reshape2 package for converting data from a long format to a wide format: **a**cast() (for producing **a**rrays) and **d**cast() (for producing **d**ata frames)
+
+- The generic call for (d)cast looks like this:
+
+```{r eval=FALSE}
+dcast(data=, formula=xvar1+xvar2 ~ yvar1+yvar2, value.var=, fun.aggregate=)
+```
+
+Some example usages:
+```{r}
+# Original data
+red.blue.subset
+# Cast a data.frame containing the individual column and columns containing the expansion of "age9" on the basis of its unique values
+dcast(data=red.blue.subset, formula=individual~age9, value.var="age9")
+# Previously melted data
+red.blue.melt
+# Cast a new data.frame from melted data.frame containing the individual column and expanding the "variable" column
+dcast(data=red.blue.melt, formula=individual~variable, value.var="value")
+```
+
+# Inference
+
+- Once we've imported our data, summarized it, carried out group-wise operations, and perhaps reshaped it, we may also like to attempt causal inference.
+
+- This often requires doing the following:
+1) Dealing with missing values
+2) Carrying out Classical Hypothesis Tests
+3) Estimating Regressions
+4) Carryingout Regression Diagnostics
+
+# Inference/Missing Values
+
+- Having missing values can hinder the quality of your inferences for a variety of reasons.  Luckily, statisticians have developed methods for dealing with missing values by imputing missing values.  One of the best packages for this is **Amelia**.
+
+```{r}
+# Install the "Amelia" package (only necessary one time)
+# install.packages("Amelia") # Not Run
+
+# Load the "Amelia" package (necessary every new R session)
+library(Amelia)
+```
+
+Consider the following panel dataset containing economic and demographic data for several African countries over roughly two decades starting in the 1970s.
+```{r}
+data(africa) # Load the "africa" data.set (included in Amelia)
+
+# Check dimensionality, colnames, head, tail, and structure
+dim(africa)
+colnames(africa)
+head(africa)
+tail(africa)
+str(africa)
+```
+
+We can check for missing values in each of the variables by calling summary()
+```{r}
+summary(africa) # Note the missing values in "gdp_pc" and "trade"
+```
+
+A distribution of potential values for these missing values can be imputed using the Amelia package.
+```{r, eval=FALSE}
+# Basic Call
+amelia(x=, m=, ts=, cs=)
+```
+
+For the "africa" dataset:
+```{r}
+# Run 5 imputations
+africa.imputed<-amelia(x=africa, m=5, ts="year", cs="country")
+# Note the class of the resulting object
+class(africa.imputed)
+# Note the many objects it contains 
+objects(africa.imputed)
+# Most important object is likely "imputations" (this contains a list of data.frames with imputed values included).  Must be sure to apply your analyses (e.g. regressions) over each data.frame in the list, and then aggregate the results
+str(africa.imputed$imputations)
+# Can also apply summary methods to objects of class "amelia"
+summary(africa.imputed)
+```
+
+An example of carring out regressions over each of the imputed datasets:
+```{r}
+# Extract the imputed datasets from the amelia object
+datasets<-africa.imputed$imputations
+# Apply the regression over each element of the list
+lapply(X=datasets, FUN=function(x){
+  summary(lm(formula=gdp_pc~infl+trade, data=x))$coefficients
+})
+```
+
+# Inference/Hypothesis Tests
+
+Suppose we have two different samples, A and B, both drawn from the standard normal distribution:
+```{r}
+a<-rnorm(n=5000, mean=0, sd=1)
+b<-rnorm(n=5000, mean=0, sd=1)
+```
+
+Suppose we also have a third sample, C, drawn from the normal distribution with mean=1 and sd=0:
+```{r}
+c<-rnorm(n=5000, mean=1, sd=1)
+```
+```{r, echo=FALSE, fig.cap=" "}
+plot(density(a), col="red", lwd=3, main="Distributions of A, B, & C")
+lines(density(b), col="blue", lwd=3)
+lines(density(c), col="green4", lwd=3)
+legend("topleft", legend=c("A", "B", "C"), col=c("red", "blue", "green4"), lwd=3)
+```
+
+One can test for differences in these distributions in either a) their means using t-tests, or b) their entire distributions using ks-tests
+
+```{r, eval=FALSE}
+# Basic Call
+t.test(x=, y=, var.equal=, conf.level=, formula=)
+ks.test(x=, y=)
+```
+
+```{r}
+t.test(x=a, y=b) # No difference in means
+t.test(x=a, y=c) # Difference in means
+ks.test(x=a, y=b) # No difference in distributions
+ks.test(x=a, y=c) # Difference in distributions
+```
+
+# Inference/Regression
+
+- Running regressions in R is extremely simple, very straightforwd (though doing things with standard errors requires a little extra work)
+
+- Most basic, catch-all regression function in R is *glm*
+
+- *glm* fits a generalized linear model with your choice of family/link function (gaussian, logit, poisson, etc.)
+
+- *lm* is just a standard linear regression (equivalent to glm with family=gaussian(link="identity"))
+
+- The basic glm call looks something like this:
+
+```{r eval=FALSE}
+glm(formula=y~x1+x2+x3+..., family=familyname(link="linkname"), data=)
+```
+
+- There are a bunch of families and links to use (help(family) for a full list), but some essentials are **binomial(link = "logit")**, **gaussian(link = "identity")**, and **poisson(link = "log")**
+
+- Example: suppose we want to regress being an old man on political party identification, income, and religion using a logit model.  The glm call would be something like this:
+
+```{r}
+# Create an indicator for men aged 65 or over
+red.blue$oldman<-ifelse(test=(red.blue$age65=="65 or over" & red.blue$sex=="male"), 
+                        yes=1, no=0)
+
+# Regress being a 65+ year old male on partyid, income, and religion (logit model)
+oldman.reg<-glm(formula=oldman~partyid+income+relign8, 
+                family=binomial(link="logit"), data=red.blue)
+```
+
+- When we store this regression in an object, we get access to several items of interest
+
+```{r}
+# View objects contained in the regression output
+objects(oldman.reg)
+# Examine regression coefficients
+oldman.reg$coefficients
+# Examine regression DoF
+oldman.reg$df.residual
+# Examine regression fit (AIC)
+oldman.reg$aic
+```
+
+- R has a helpful summary method for regression objects
+```{r}
+summary(oldman.reg)
+```
+
+- Can also extract useful things from the summary object (like a matrix of coefficient estimates...)
+
+```{r}
+# Store summary method results
+sum.oldman.reg<-summary(oldman.reg)
+# View summary method results objects
+objects(sum.oldman.reg)
+# View table of coefficients
+sum.oldman.reg$coefficients
+```
+
+- Note that, in our results, R has broken up our variables into their different factor levels (as it will do whenever your regressors have factor levels)
+
+- If your data aren't factorized, you can tell glm to factorize a variable (i.e. create dummy variables on the fly) by writing
+
+```{r, eval=FALSE}
+glm(formula=y~x1+x2+factor(x3), family=family(link="link"), data=)
+```
+
+- There are also some useful shortcuts for regressing on interaction terms:
+
+**x1:x2** interacts all terms in x1 with all terms in x2
+```{r}
+summary(glm(formula=oldman~partyid:income, 
+            family=binomial(link="logit"), data=red.blue))
+```
+
+**x1/*x2** produces the cross of x1 and x2, or x1+x2+x1:x2
+```{r}
+summary(glm(formula=oldman~partyid*income, 
+            family=binomial(link="logit"), data=red.blue))
+```
+
+- Sometimes, there may be considerable uncertainty as to the proper form of the model to be estimated.  For this, one can source the **glm.sim** function from Github using the package **devtools**.
+
+```{r, message=FALSE}
+# Install the "devtools" package (only necessary one time)
+# install.packages("devtools") # Not Run
+
+# Load the "devtools" package (necessary every new R session)
+library(devtools)
+
+# Source the "glm.sim" function from gist 9359460
+source_gist("https://gist.github.com/ckrogs/9359460") 
+```
+
+```{r, eval=FALSE}
+# Basic Call
+glm.sim(data=, dv=, graphs=, graph.best=, robust=, interactions=, quadratics=)
+```
+
+Consider an example with the "africa" dataset.  Suppose we wanted to regress "gdp_pc" on some combination of "infl", "trade", "civlib", and "population", but we were unsure which model best explained the outcome.  **glm.sim** can runs all the possible models and aggregates the results.
+```{r, message=FALSE, fig.cap=" ", warning=FALSE}
+# Remove extraneous columns from the data
+africa.subset<-africa[,c(3:7)]
+
+# Run glm.sim with graphs
+output<-glm.sim(data=africa.subset, dv="gdp_pc", graphs=T)
+
+# Note the objects 
+objects(output)
+
+# Run glm.sim with graphs and the best model 
+output<-glm.sim(data=africa.subset, dv="gdp_pc", graphs=T, graph.best=1)
+output$plot.p
+output$plot.est
+# Run glm.sim with graphs, best model, and robust standard errors
+output<-glm.sim(data=africa.subset, dv="gdp_pc", graphs=T, graph.best=1, robust=T)
+output$plot.p
+output$plot.est
+# Run glm.sim with graphs, best model, and first-order interactions
+output<-glm.sim(data=africa.subset, dv="gdp_pc", graphs=T, graph.best=1, interactions=T)
+output$plot.p
+output$plot.est
+# Run glm.sim with graphs, best model, and quadratic terms
+output<-glm.sim(data=africa.subset, dv="gdp_pc", graphs=T, graph.best=1, quadratics=T)
+output$plot.p
+output$plot.est
+```
+
+# Inferences/Regression Diagnostics
+
+- The package *lmtest* has most of what you'll need to run basic regression diagnostics.
+
+- Breusch-Pagan Test for Heteroscedasticity 
+```{r}
+bptest(oldman.reg)
+```
+
+- Breusch-Godfrey Test for Higher-order Serial Correlation 
+```{r}
+bgtest(oldman.reg)
+```
+
+- Durbin-Watson Test for Autocorrelation of Disturbances
+```{r}
+dwtest(oldman.reg)
+```
+
+- Can also estimate heteroskedasticity/autocorrelation consistent standard errors via *coeftest* and the *sandwich* package
+```{r}
+coeftest(x=oldman.reg, vcov.=vcovHC)
+```
+
+# stop()
