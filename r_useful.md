@@ -1,12 +1,15 @@
-% Useful Stuff in R
-% [Chris Krogslund](http://ckro.gs); [Political Science](http://polisci.berkeley.edu) // [D-Lab](http://dlab.berkeley.edu) // [UC Berkeley](http://www.berkeley.edu/)
-% [ckrogslund@berkeley.edu](mailto:ckrogslund@berkeley.edu)
+# Useful Stuff in R
+**[Chris Krogslund](http://ckro.gs)**
+
+[Political Science](http://polisci.berkeley.edu) // [D-Lab](http://dlab.berkeley.edu) // [UC Berkeley](http://www.berkeley.edu/)
+
+**[ckrogslund@berkeley.edu](mailto:ckrogslund@berkeley.edu)**
 
 
 
 
 
-# What exactly is "useful stuff" in R?
+## What exactly is "useful stuff" in R?
 
 - For some, it might just be basic calculations
 
@@ -70,7 +73,7 @@ system.time(expr = solve(a = big.matrix))  # Compute time required to invert 'bi
 ```
 
 
-# Useful Stuff: Applied Research Edition
+## Useful Stuff: Applied Research Edition
 
 - For most applied researchers, "useful stuff" that can be done in R boils down to a few core items: 
 
@@ -80,7 +83,7 @@ c) Carrying out operations and calculations across ***groups***
 d) ***Reshaping*** data to and from various formats
 e) Attempting to conduct ***causal inference*** 
 
-# Importing data/spreadsheets 
+## Importing data/spreadsheets 
 
 - For spreadsheet data that **is not** explicitly saved as a Microsoft Excel file:
 
@@ -177,7 +180,7 @@ cpds.data[1:5, 1:5]
 ```
 
 
-# Importing data/proprietaries (e.g.: .dta, .spss, .ssd)
+## Importing data/proprietaries (e.g.: .dta, .spss, .ssd)
 
 
 ```r
@@ -226,7 +229,7 @@ data <- read.dbf(file = )
 ```
 
 
-# Importing data/urls (e.g.: http, https, ftp)
+## Importing data/urls (e.g.: http, https, ftp)
 
 - Most data importing facilities in R can be adapted to import non-local files via http/s/ftp
 - For instance, [this online dataset](http://www.quandl.com/DISASTERCENTER-US-Disaster-Center/RATES-US-Crime-Rates-per-100-000-persons)
@@ -268,7 +271,7 @@ crime.data[1:25, 1:5]
 ```
 
 
-# Importing data/other (e.g.: html tables, html, xml, json) 
+## Importing data/other (e.g.: html tables, html, xml, json) 
 
 - Say we wanted to scrape a list of votes in the US Congress contained in an html table (like [this](http://clerk.house.gov/evs/2014/ROLL_000.asp))
 
@@ -565,7 +568,7 @@ head(cpds.data)
 ```
 
 
-# Summarizing data/example dataset
+## Summarizing data/example dataset
 
 Replication data from Gelman et al., "Rich State, Poor State, Red State, Blue State: What’s the Matter with Connecticut?", *Quarterly Journal of Political Science*, 2007, 2: 345-367
 
@@ -578,7 +581,7 @@ red.blue <- read.dta("datasets/2004_labeled_processed_race.dta")
 ```
 
 
-# Summarizing data/object structure
+## Summarizing data/object structure
 
 ```r
 # Get the object class
@@ -735,7 +738,7 @@ str(red.blue)
 ```
 
 
-# Summarizing data/object content
+## Summarizing data/object content
 
 - A good place to start with our data is to calculate summary statistics
 
@@ -1050,7 +1053,7 @@ length(males)/length(gender) * 100
 - That means we have to calculate frequencies as above for each race in {White, Black, Hispanic/Latino, Asian, Other} and each vote choice in {Bush, Kerry, Nader, Other, No Vote}.
 - How to tackle these tabulations?
 
-# Group-wise Operations
+## Group-wise Operations
 
 All techniques for this problem rely on the ***split-apply-combine*** strategy
 
@@ -1100,7 +1103,7 @@ mean(x)|mean(y)|z
 2|2|1
 5|2|2
 
-# Group-wise Operations/plyr
+## Group-wise Operations/plyr
 
 - *plyr* is the go-to package for all your splitting-applying-combining needs
 - Among its many benefits (above base R capabilities):
@@ -1120,7 +1123,7 @@ library(plyr)
 ```
 
 
-# Group-wise Operations/plyr/selecting functions
+## Group-wise Operations/plyr/selecting functions
 
 - Two essential questions:
 1) What is the class of your input object?
@@ -1129,7 +1132,7 @@ library(plyr)
 - If you want to split a **d**ata frame, and return results as a **l**ist, you use **dl**ply
 - If you want to split a **l**ist, and return results as a **d**ata frame, you use **ld**ply
 
-# Group-wise Operations/plyr/writing commands
+## Group-wise Operations/plyr/writing commands
 
 All of the major plyr functions have the same basic syntax
 
@@ -1322,7 +1325,7 @@ llply(.data = red.blue.race.list, .fun = summarize, kerry = length(pres04[pres04
 ```
 
 
-# Group-wise Operations/plyr/functions
+## Group-wise Operations/plyr/functions
 
 - plyr can accomodate any user-defined function, but it also comes with some pre-defined functions that assist with the most common split-apply-combine tasks
 - We've already seen **summarize**, which creates user-specified vectors and combines them into a data.frame.  Here are some other helpful functions:
@@ -1525,7 +1528,7 @@ red.blue.sex.age[1:25, 1:5]
 ```
 
 
-# Group-wise Operations/dplyr
+## Group-wise Operations/dplyr
 
 - While plyr is a really great split-apply-combine tool, it can be a little slow when working over very large datasets.  Consider this dataset containing all votes cast by all members of the U.S. House of Representatives since 1990 (roughly 7 million observations).
 
@@ -1661,7 +1664,7 @@ time.ddply/time.dplyr
 ```
 
 
-# Reshaping Data/reshape2
+## Reshaping Data/reshape2
 
 - Often times, even before we're interested in doing all this group-wise stuff, we need to reshape our data.  For instance, datasets often arrive at your desk in wide (long) form and you need to convert them to long (wide) form.
 
@@ -1679,7 +1682,7 @@ library(reshape2)
 ```
 
 
-# Reshaping Data/reshape2/melt
+## Reshaping Data/reshape2/melt
 
 - melt() is used to convert wide-form data to long-form.  The basic idea is to take your data.frame and melt it down to a minimal number of columns using two essential pieces of information:
 1) **Unit-of-Analysis identifiers**, or columns you *don't* want to melt down
@@ -1956,7 +1959,7 @@ melt(data = red.blue.subset, id.vars = "individual", measure.vars = c("pres04",
 ```
 
 
-# Reshaping Data/reshape2/cast
+## Reshaping Data/reshape2/cast
 
 - There are two main cast functions in the reshape2 package for converting data from a long format to a wide format: **a**cast() (for producing **a**rrays) and **d**cast() (for producing **d**ata frames)
 
@@ -2089,7 +2092,7 @@ dcast(data = red.blue.melt, formula = individual ~ variable, value.var = "value"
 ```
 
 
-# Inference
+## Inference
 
 - Once we've imported our data, summarized it, carried out group-wise operations, and perhaps reshaped it, we may also like to attempt causal inference.
 
@@ -2099,7 +2102,7 @@ dcast(data = red.blue.melt, formula = individual ~ variable, value.var = "value"
 3) Estimating Regressions
 4) Carryingout Regression Diagnostics
 
-# Inference/Missing Values
+## Inference/Missing Values
 
 - Having missing values can hinder the quality of your inferences for a variety of reasons.  Luckily, statisticians have developed methods for dealing with missing values by imputing missing values.  One of the best packages for this is **Amelia**.
 
@@ -2396,7 +2399,7 @@ lapply(X = datasets, FUN = function(x) {
 ```
 
 
-# Inference/Hypothesis Tests
+## Inference/Hypothesis Tests
 
 Suppose we have two different samples, A and B, both drawn from the standard normal distribution:
 
@@ -2489,7 +2492,7 @@ ks.test(x = a, y = c)  # Difference in distributions
 ```
 
 
-# Inference/Regression
+## Inference/Regression
 
 - Running regressions in R is extremely simple, very straightforwd (though doing things with standard errors requires a little extra work)
 
@@ -8361,7 +8364,7 @@ output$plot.est
 ![ ](figure/unnamed-chunk-718.png) 
 
 
-# Inferences/Regression Diagnostics
+## Inferences/Regression Diagnostics
 
 - The package *lmtest* has most of what you'll need to run basic regression diagnostics.
 
@@ -8442,4 +8445,4 @@ coeftest(x = oldman.reg, vcov. = vcovHC)
 ```
 
 
-# stop()
+## stop()
