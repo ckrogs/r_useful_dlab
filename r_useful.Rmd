@@ -155,7 +155,7 @@ colnames(votes.2014) # Get column names
 votes.2014[1:25, 1:5]
 ```
 
-- Or say we wanted to scrape the content of a web page (for example, [here](http://www.whitehouse.gov/the_press_office/President_Barack_Obamas_Inaugural_Address))
+- Or say we wanted to scrape the content of a web page (for example, [here](https://www.whitehouse.gov/the-press-office/2015/03/28/weekly-address-protecting-working-americans-paychecks))
 ```{r, message=FALSE}
 # Install the "RCurl" package (only necessary one time)
 # install.packages("RCurl") # Not Run
@@ -164,7 +164,7 @@ votes.2014[1:25, 1:5]
 library(RCurl)
 library(XML)
 
-link<-"http://www.whitehouse.gov/the_press_office/President_Barack_Obamas_Inaugural_Address"
+link<-"https://www.whitehouse.gov/the-press-office/2015/03/28/weekly-address-protecting-working-americans-paychecks"
 speech<-getURL(url=link)
 
 # Optional html parsing (clean file, extract content)
